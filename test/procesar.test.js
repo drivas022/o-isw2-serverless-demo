@@ -77,3 +77,13 @@ test("procesar cumple contrato minimo de calidad (estructura JSON)", () => {
   // 3) Tipos correctos
   assert.equal(typeof res.body.longitud, "number");
 });
+
+test("procesar falla si nombre === 'error' (falla simulada)", () => {
+  const req = { query: { nombre: "error" } };
+  const res = makeRes();
+
+  handler(req, res);
+
+  assert.equal(res.statusCode, 500);
+  assert.deepEqual(res.body, { error: "Fallo simulado en /api/procesar" });
+});
