@@ -1,28 +1,27 @@
-module.exports = async (req, res) => {
-  const url = new URL(req.url, `http://${req.headers.host}`);
-  const nombre = (url.searchParams.get("nombre") || "").trim();
+export default function handler(req, res) {
+  const { nombre } = req.query;
 
-  const timestamp = new Date().toISOString();
-
-  // Mini-reto: simular error si nombre = "error"
-  if (nombre.toLowerCase() === "error") {
-    console.log("[/api/procesar] Simulando error. nombre=error");
-    return res.status(500).json({
+  if (!nombre) {
+    return res.status(400).json({
       ok: false,
-      error: "Error simulado en /api/procesar",
-      timestamp,
+      error: "Falta el parámetro 'nombre'",
     });
   }
 
-  // "Trabajo" / lógica de negocio simulada
-  const mensajeProcesado = `Hola ${nombre || "desconocido"}, ya procesé tu nombre ✅`;
+  if (String(nombre).toLowerCase() === "error") {
+    return res.status(500).json({
+      ok: false,
+      error: "Error simulado en /api/procesar",
+      timestamp: new Date().toISOString(),
+    });
+  }
 
-  console.log("[/api/procesar] OK", { nombre, timestamp });
+  const timestamp = new Date().toISOString();
+  const resultado = `Nombre procesado: ${String(nombre).trim().toUpperCase()}`;
 
   return res.status(200).json({
     ok: true,
-    nombre,
-    mensaje: mensajeProcesado,
+    resultado,
     timestamp,
   });
-};
+}
