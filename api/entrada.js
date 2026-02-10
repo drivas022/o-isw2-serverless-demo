@@ -1,60 +1,37 @@
-module.exports = async (req, res) => {
-  const url = new URL(req.url, `http://${req.headers.host}`);
-  const nombre = (url.searchParams.get("nombre") || "").trim();
-
-  // Esta función "conoce" al usuario (recibe el request del browser)
-  if (!nombre) {
-    return res.status(400).json({
-      ok: false,
-      error: "Falta el query param ?nombre=...",
-      ejemplo: "/api/entrada?nombre=Juan",
-    });
-  }
-
-  // Construimos base URL (sirve tanto en Vercel como local)
-  const proto = req.headers["x-forwarded-proto"] || "http";
-  const host = req.headers.host;
-  const baseUrl = `${proto}://${host}`;
-
-  const urlProcesar = `${baseUrl}/api/procesar?nombre=${encodeURIComponent(nombre)}`;
-
+export default async function handler(req, res) {
   try {
-    console.log("[/api/entrada] Llamando a:", urlProcesar);
+    const nombre = req.query?.nombre || "anónimo";
 
-    const r = await fetch(urlProcesar, {
-      headers: { accept: "application/json" },
-    });
+    const protoHeader = req.headers["x-forwarded-proto"];
+    const proto = (protoHeader ? String(protoHeader).split(",")[0].trim() : "https");
+    const host = req.headers.host;
 
-    if (!r.ok) {
-      const text = await r.text();
-      console.log("[/api/entrada] /api/procesar FALLÓ", r.status, text);
+    const baseUrl = `${proto}://${host}`;
 
-      // Resiliencia básica: devolver error claro
+    const response = await fetch(
+      `${baseUrl}/api/procesar?nombre=${encodeURIComponent(nombre)}`
+    );
+
+    if (!response.ok) {
+      const text = await response.text();
       return res.status(502).json({
-        ok: false,
-        error: "Falló el servicio /api/procesar",
-        statusProcesar: r.status,
+        error: "Fallo llamando a /api/procesar",
+        status: response.status,
         detalle: text,
       });
     }
 
-    const dataProcesada = await r.json();
+    const data = await response.json();
 
-    // Respuesta combinada
     return res.status(200).json({
-      ok: true,
-      quienConoceAlUsuario: "api/entrada",
-      quienHaceElTrabajo: "api/procesar",
-      entradaRecibio: { nombre },
-      respuestaDeProcesar: dataProcesada,
-      mensajeFinal: `Entrada recibió "${nombre}" y Procesar respondió: "${dataProcesada.mensaje}"`,
+      entrada: nombre,
+      resultado: data.resultado,
+      flujo: "entrada -> procesar",
     });
   } catch (err) {
-    console.log("[/api/entrada] Error inesperado:", err);
-
     return res.status(500).json({
-      ok: false,
-      error: "Error inesperado en /api/entrada",
+      error: "entrada crashed",
+      detalle: String(err),
     });
   }
-};
+}
