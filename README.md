@@ -1,4 +1,4 @@
-# ISW2 – Serverless Demo
+# ISW2 – Serverless Demo 
 
 ## Reflexión: Calidad y CI
 
@@ -21,3 +21,5 @@ Ignorar el CI hace que se metan cambios rotos al repo:
 - Se acumula deuda técnica: arreglar después cuesta más que prevenir.
 - Aumentan los bugs en producción y el tiempo se va en apagar incendios en vez de avanzar.
 En resumen: el equipo pierde control de calidad y cada cambio se vuelve un riesgo.
+
+Comienzo Taller Práctico SonarCloud
